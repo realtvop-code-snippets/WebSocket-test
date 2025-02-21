@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket 客户端</title>
+    <style>
+        #messages {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+        .received {
+            color: blue;
+        }
+        .sent {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div id="messages"></div>
+    <input type="text" id="messageInput" placeholder="输入消息">
+    <button onclick="sendMessage()">发送</button>
+    <div id="status"></div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:8080');
+        const messagesDiv = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+        const statusDiv = document.getElementById('status');
+
+        ws.onopen = function() {
+            statusDiv.textContent = '已连接到服务器';
+            addMessage('系统', '已连接到服务器');
+        };
+
+        ws.onmessage = function(event) {
+            addMessage('收到', event.data, 'received');
+        };
+
+        ws.onclose = function() {
+            statusDiv.textContent = '与服务器断开连接';
+            addMessage('系统', '与服务器断开连接');
+        };
+
+        ws.onerror = function(error) {
+            statusDiv.textContent = '连接错误';
+            addMessage('系统', '连接错误');
+        };
+
+        function sendMessage() {
+            const message = messageInput.value;
+            if (message && ws.readyState === WebSocket.OPEN) {
+                ws.send(message);
+                addMessage('发送', message, 'sent');
+                messageInput.value = '';
+            }
+        }
+
+        function addMessage(prefix, message, className = '') {
+            const div = document.createElement('div');
+            div.textContent = `${prefix}: ${message}`;
+            if (className) {
+                div.className = className;
+            }
+            messagesDiv.appendChild(div);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // 支持按回车键发送消息
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
